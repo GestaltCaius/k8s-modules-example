@@ -1,0 +1,10 @@
+gateway:
+  name: external-http
+  gatewayClassName: gke-l7-global-external-managed
+routes:
+  - name: example
+    rules:
+      - pathMatched: "/example"
+        backendRef:
+          name: example-svc
+          port: 8080

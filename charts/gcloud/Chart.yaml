@@ -1,0 +1,15 @@
+apiVersion: v2
+name: gcloud
+version: "0.1.0"
+kubeVersion: ">= 1.30.0-0"
+description: gcloud k8s deployment
+type: application
+keywords:
+  - gcloud
+home: https://github.com/GestaltCaius
+sources:
+  - https://github.com/GestaltCaius
+maintainers:
+  - name: Gestalt Caius
+    url: https://github.com/GestaltCaius
+appVersion: "509.0.0-stable"

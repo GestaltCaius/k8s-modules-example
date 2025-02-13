@@ -1,0 +1,16 @@
+apiVersion: v2
+name: k8s-gateway-and-routes
+version: "0.1.0"
+kubeVersion: ">= 1.30.0-0"
+description: Deploys gateway and HttpRoutes
+type: application
+keywords:
+  - gateway
+  - http routes
+home: https://github.com/GestaltCaius
+sources:
+  - https://github.com/GestaltCaius
+maintainers:
+  - name: Gestalt Caius
+    url: https://github.com/GestaltCaius
+appVersion: "0.1.0"

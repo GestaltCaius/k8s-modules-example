@@ -1,0 +1,28 @@
+{{- range $route := $.Values.routes}}
+kind: HTTPRoute
+apiVersion: gateway.networking.k8s.io/v1beta1
+metadata:
+  name: {{ $route.name }}
+spec:
+  parentRefs:
+    - kind: Gateway
+      name: {{ $.Values.gateway.name }}
+  hostnames: []
+  rules: {{ range $rule := $route.rules }}
+    - matches:
+        - path:
+            value: {{ $rule.pathMatched }}
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: {{ $rule.backendRef.name }}
+          port: {{ $rule.backendRef.port }}
+  {{- else -}}
+  {}
+  {{ end }}
+---
+{{- end }}

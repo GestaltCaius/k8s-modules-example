@@ -1,0 +1,9 @@
+replicas: 1
+version: 509.0.0-stable
+requests:
+  memory: "128Mi"
+  cpu: "100m"
+limits:
+  memory: "128Mi"
+  cpu: "200m"
+serviceAccountName: "default"
