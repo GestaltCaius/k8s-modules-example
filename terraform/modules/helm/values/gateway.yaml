@@ -1,0 +1,18 @@
+gateway:
+  name: external-http
+  gatewayClassName: gke-l7-global-external-managed
+routes:
+  - name: podinfo
+    rules:
+      - pathMatched: "/v7"
+        backendRef:
+          name: podinfo-6-7-1
+          port: 9898
+      - pathMatched: "/v5"
+        backendRef:
+          name: podinfo-6-5-0
+          port: 9898
+      - pathMatched: "/v6"
+        backendRef:
+          name: podinfo-6-6-0
+          port: 9898

@@ -1,0 +1,8 @@
+replicas: 1
+version: 509.0.0-stable
+requests:
+  memory: "512Mi"
+  cpu: "100m"
+limits:
+  memory: "512Mi"
+  cpu: "200m"
