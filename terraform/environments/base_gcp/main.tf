@@ -20,8 +20,6 @@ module "workload_pool_identity" {
   }
 
   attribute_condition = <<EOT
-    attribute.repository == "GestaltCaius/k8s-modules-example" &&
-    attribute.aud == "https://github.com/GestaltCaius" &&
-    attribute.repository_owner == "GestaltCaius"
-EOT
+    attribute.repository == "GestaltCaius/k8s-modules-example"
+    EOT
 }
