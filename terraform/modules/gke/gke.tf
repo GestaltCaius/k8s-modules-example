@@ -16,6 +16,22 @@ resource "google_container_cluster" "primary" {
   cost_management_config {
     enabled = true
   }
+  resource_labels = var.labels
+  network_policy {
+    enabled = true
+  }
+  private_cluster_config {
+    enable_private_nodes = true
+  }
+  master_authorized_networks_config {
+    dynamic "cidr_blocks" {
+      for_each = var.master_authorized_networks
+      content {
+        cidr_block   = cidr_blocks.value.cidr_block
+        display_name = cidr_blocks.value.name
+      }
+    }
+  }
 }
 
 resource "google_container_node_pool" "spot_pool" {
@@ -38,10 +54,19 @@ resource "google_container_node_pool" "spot_pool" {
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
     ]
+    image_type = "COS_CONTAINERD"
     # required to enable workload identity on node pool
     workload_metadata_config {
       mode = "GKE_METADATA"
     }
+    metadata = {
+      disable-legacy-endpoints = true
+      mode                     = "SECURE"
+    }
+  }
+  management {
+    auto_upgrade = true
+    auto_repair  = true
   }
 }
 

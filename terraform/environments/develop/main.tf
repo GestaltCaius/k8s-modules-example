@@ -26,7 +26,14 @@ module "gke" {
   region           = var.region
   vpc_name         = module.network.vpc
   subnet_self_link = module.network.subnet
-  depends_on       = [module.services, module.network]
+  labels           = var.default_labels
+  master_authorized_networks = {
+    rod = {
+      cidr_block = "2.13.177.109/32"
+      name       = "Rod home IP"
+    }
+  }
+  depends_on = [module.services, module.network]
 }
 
 module "network" {

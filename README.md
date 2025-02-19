@@ -1,5 +1,5 @@
 ```bash
-terraform init -backend-config "bucket=YOUR_BUCKET_NAME" -reconfigure
+terraform init -backend-config "bucket=$BUCKET_NAME" -reconfigure
 ```
 # Workload Identity on GKE
 
