@@ -6,9 +6,9 @@ name: CI
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -41,13 +41,13 @@ jobs:
 
     # Add "id-token" with the intended permissions.
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
 
     steps:
-    - uses: 'actions/checkout@v4'
+      - uses: "actions/checkout@v4"
 
-    - uses: 'google-github-actions/auth@v2'
-      with:
-        # project_id: 'my-project'
-        workload_identity_provider: "projects/1009074585218/locations/global/workloadIdentityPools/cicd/providers/cicd-runner"
+      - uses: "google-github-actions/auth@v2"
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
