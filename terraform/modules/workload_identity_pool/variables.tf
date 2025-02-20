@@ -17,3 +17,7 @@ variable "project_id" {
 variable "cicd_roles" {
   type = set(string)
 }
+
+variable "subject" {
+  type = string
+}

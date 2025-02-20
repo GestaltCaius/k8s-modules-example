@@ -32,6 +32,10 @@ module "gke" {
       cidr_block = "2.13.177.109/32"
       name       = "Rod home IP"
     }
+    stack_labs_paris = {
+      cidr_block = "85.68.91.249/32"
+      name       = "Stack Labs Paris"
+    }
   }
   depends_on = [module.services, module.network]
 }

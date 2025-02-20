@@ -6,9 +6,11 @@ module "workload_pool_identity" {
   cicd_roles = [
     "roles/storage.admin",
   ]
+  subject = "GestaltCaius/k8s-modules-example"
 
   attribute_mapping = {
-    "google.subject"                  = "assertion.sub"
+    # "google.subject"                  = "assertion.sub"
+    "google.subject"                  = "assertion.repository"
     "attribute.actor"                 = "assertion.actor"
     "attribute.aud"                   = "assertion.aud"
     "attribute.repository"            = "assertion.repository"
