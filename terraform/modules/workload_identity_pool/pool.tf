@@ -4,9 +4,13 @@ resource "google_iam_workload_identity_pool" "pool" {
   description               = "Identity pool for automated pipelines"
 }
 
+resource "random_id" "idp" {
+  byte_length = 8
+}
+
 resource "google_iam_workload_identity_pool_provider" "gh_actions" {
   workload_identity_pool_id          = google_iam_workload_identity_pool.pool.workload_identity_pool_id
-  workload_identity_pool_provider_id = "cicd-runner"
+  workload_identity_pool_provider_id = "cicd-runner-${random_id.idp.hex}"
   display_name                       = "CICD runner"
   description                        = "CICD runner identity pool provider"
   attribute_condition                = var.attribute_condition
