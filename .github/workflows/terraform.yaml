@@ -47,7 +47,9 @@ jobs:
         run: terraform fmt -check ../..
 
       - name: terraform tfvars file setup
-        run: echo "${{ secrets.TF_VARS_FILE }}" > terraform.tfvars
+        env:
+          TF_VARS_FILE: ${{ secrets.TF_VARS_FILE }}
+        run: echo "$TF_VARS_FILE" > terraform.tfvars
 
       # Generates an execution plan for Terraform
       - name: Terraform Plan
