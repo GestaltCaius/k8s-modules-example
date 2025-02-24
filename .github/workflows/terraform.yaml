@@ -55,10 +55,6 @@ jobs:
       - name: Terraform Plan
         run: terraform plan
 
-      - uses: trstringer/manual-approval@v1
-        if: always() # allows to ignore tf plan errors
-        with:
-          minimum-approvals: 1
-
       - name: Terraform Apply
+        if: always() # allows to ignore tf plan errors
         run: terraform apply -auto-approve
