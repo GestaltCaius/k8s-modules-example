@@ -1,24 +1,37 @@
 module "rbac" {
   source                      = "../../modules/rbac"
   kubernetes_service_accounts = var.kubernetes_service_accounts
-  depends_on                  = [module.iam, module.gke]
+  depends_on = [
+    module.services,
+    module.iam,
+    module.gke,
+  ]
 }
 
 module "iam" {
   source                      = "../../modules/iam"
   project_id                  = var.project_id
   kubernetes_service_accounts = var.kubernetes_service_accounts
+  depends_on = [
+    module.services,
+  ]
 }
 
 module "gcs" {
   source = "../../modules/gcs"
   region = var.region
+  depends_on = [
+    module.services,
+  ]
 }
 
 module "helm" {
   source                 = "../../modules/helm"
   gcloud_service_account = var.helm_service_accounts["gcloud"]
-  depends_on             = [module.gke]
+  depends_on = [
+    module.services,
+    module.gke,
+  ]
 }
 
 module "gke" {
@@ -37,12 +50,17 @@ module "gke" {
       name       = "Stack Labs Paris"
     }
   }
-  depends_on = [module.services, module.network]
+  depends_on = [
+    module.services,
+    module.network,
+  ]
 }
 
 module "network" {
-  source     = "../../modules/network"
-  depends_on = [module.services]
+  source = "../../modules/network"
+  depends_on = [
+    module.services,
+  ]
 }
 
 module "services" {
