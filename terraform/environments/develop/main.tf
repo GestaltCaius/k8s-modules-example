@@ -49,6 +49,10 @@ module "gke" {
       cidr_block = "85.68.91.249/32"
       name       = "Stack Labs Paris"
     }
+    github_actions_runners = {
+      cidr_block = "0.0.0.0/0"
+      name       = "GH Actions Runners"
+    }
   }
   depends_on = [
     module.services,
