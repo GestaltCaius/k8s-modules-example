@@ -9,6 +9,10 @@ resource "google_container_cluster" "primary" {
   deletion_protection = false
   network             = data.google_compute_network.gke.name
   subnetwork          = data.google_compute_subnetwork.gke_subnet.name
+  node_config {
+    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+    service_account = google_service_account.gke.email
+  }
   # required to enable workload identity
   workload_identity_config {
     workload_pool = "${data.google_client_config.default.project}.svc.id.goog"
