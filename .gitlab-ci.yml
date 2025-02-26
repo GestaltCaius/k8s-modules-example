@@ -5,6 +5,8 @@ variables:
   SERVICE_ACCOUNT_EMAIL: cicd-runner@sl-rgu-gcp-sandbox-2y41-sbx.iam.gserviceaccount.com # full email address of the service account to impersonate, created in the previous section.
   GCP_SERVICE_ACCOUNT: "$SERVICE_ACCOUNT_EMAIL"
   GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}"
+  SERVICE_ACCOUNT_JSON_PATH: "${CI_PROJECT_DIR}/.gcp_temp_cred.json" # GCP credentials JSON file path (service-account-file.json)
+  SERVICE_ACCOUNT_JWT_PATH: "${CI_PROJECT_DIR}/.ci_job_jwt_file" # JWT oauth2 token file
 
 .id_tokens:
   id_tokens:
@@ -14,21 +16,19 @@ variables:
 gcp-auth:
   image: google/cloud-sdk:slim
   extends: .id_tokens
-  variables:
-    SERVICE_ACCOUNT_JSON_PATH: "${CI_PROJECT_DIR}/.gcp_temp_cred.json"
   script:
     - set -euxo pipefail
-    - echo ${GITLAB_OIDC_TOKEN} > .ci_job_jwt_file
+    - echo ${GITLAB_OIDC_TOKEN} > "$SERVICE_ACCOUNT_JWT_PATH"
     - gcloud iam workload-identity-pools create-cred-config ${GCP_WORKLOAD_IDENTITY_PROVIDER}
       --service-account="${GCP_SERVICE_ACCOUNT}"
       --output-file="$SERVICE_ACCOUNT_JSON_PATH"
-      --credential-source-file=.ci_job_jwt_file
+      --credential-source-file="SERVICE_ACCOUNT_JWT_PATH"
     - gcloud auth login --cred-file="$SERVICE_ACCOUNT_JSON_PATH"
     - gcloud auth list
   artifacts:
     paths:
-      - .gcp_temp_cred.json # GCP credentials JSON file path (service-account-file.json)
-      - "$SERVICE_ACCOUNT_JSON_PATH"
+      - $SERVICE_ACCOUNT_JSON_PATH
+      - $SERVICE_ACCOUNT_JWT_PATH
 
 terraform-plan:
   image:
@@ -37,7 +37,7 @@ terraform-plan:
   needs:
     - gcp-auth
   variables:
-    GOOGLE_APPLICATION_CREDENTIALS: "${CI_PROJECT_DIR}/.gcp_temp_cred.json"
+    GOOGLE_APPLICATION_CREDENTIALS: "$SERVICE_ACCOUNT_JSON_PATH"
     TF_WORKSPACE: default
     TF_WORKDIR: ./terraform/environments/develop
     TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7
