@@ -1,46 +1,56 @@
-# job:
-#   id_tokens:
-#     GITLAB_OIDC_TOKEN:
-#       aud: https://gitlab.example.com
-#   environment:
-#     PROJECT_NUMBER is your Google Cloud project number (not name).
-#     POOL_ID is the ID of the Workload Identity Pool created in the first section.
-#     PROVIDER_ID is the ID of the Workload Identity Provider created in the second section.
-#     GITLAB_OIDC_TOKEN is an OIDC ID token.
-#     SERVICE_ACCOUNT_EMAIL is the full email address of the service account to impersonate, created in the previous section.
-#     FEDERATED_TOKEN is the federated token retrieved from the previous step.
-#   script: |
-#     PAYLOAD="$(cat <<EOF
-#     {
-#       "audience": "//iam.googleapis.com/projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID",
-#       "grantType": "urn:ietf:params:oauth:grant-type:token-exchange",
-#       "requestedTokenType": "urn:ietf:params:oauth:token-type:access_token",
-#       "scope": "https://www.googleapis.com/auth/cloud-platform",
-#       "subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
-#       "subjectToken": "${GITLAB_OIDC_TOKEN}"
-#     }
-#     EOF
-#     )"
-#     FEDERATED_TOKEN="$(curl --fail "https://sts.googleapis.com/v1/token" \
-#       --header "Accept: application/json" \
-#       --header "Content-Type: application/json" \
-#       --data "${PAYLOAD}" \
-#       | jq -r '.access_token'
-#     )"
-#     ACCESS_TOKEN="$(curl --fail "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/SERVICE_ACCOUNT_EMAIL:generateAccessToken" \
-#       --header "Accept: application/json" \
-#       --header "Content-Type: application/json" \
-#       --header "Authorization: Bearer FEDERATED_TOKEN" \
-#       --data '{"scope": ["https://www.googleapis.com/auth/cloud-platform"]}' \
-#       | jq -r '.accessToken'
-#     )"
+variables:
+  GCP_WORKLOAD_IDENTITY_PROVIDER: projects/373423551528/locations/global/workloadIdentityPools/cicd/providers/gitlab
+  PROJECT_NUMBER: 373423551528 # is your Google Cloud project number (not name).
+  POOL_ID is the: cicd # ID of the Workload Identity Pool created in the first section.
+  PROVIDER_ID: gitlab # is the ID of the Workload Identity Provider created in the second section.
+  SERVICE_ACCOUNT_EMAIL: cicd-runner@sl-rgu-gcp-sandbox-2y41-sbx.iam.gserviceaccount.com # is the full email address of the service account to impersonate, created in the previous section.
 
-include:
-  # # main template
-  # - component: $CI_SERVER_FQDN/to-be-continuous/gcloud/gitlab-ci-gcloud@5.3.1
-  # OIDC variant
-  - component: $CI_SERVER_FQDN/to-be-continuous/gcloud/gitlab-ci-gcloud-oidc@5.3.1
-    inputs:
-      # oidc-aud: "https://iam.googleapis.com"
-      oidc-provider: "projects/373423551528/locations/global/workloadIdentityPools/cicd/providers/gitlab"
-      # oidc-account: "<name>@$<gcp_nonprod_proj_id>.iam.gserviceaccount.com"
+.id_tokens:
+  id_tokens:
+    GITLAB_OIDC_TOKEN:
+      aud: https://gitlab.com
+
+gcp-sts:
+  extends: .id_tokens
+  image: dwdraju/alpine-curl-jq
+  script: |
+    set -euxo pipefail
+
+    PAYLOAD="$(cat <<EOF
+    {
+      "audience": "//iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}",
+      "grantType": "urn:ietf:params:oauth:grant-type:token-exchange",
+      "requestedTokenType": "urn:ietf:params:oauth:token-type:access_token",
+      "scope": "https://www.googleapis.com/auth/cloud-platform",
+      "subjectTokenType": "urn:ietf:params:oauth:token-type:jwt",
+      "subjectToken": "${GITLAB_OIDC_TOKEN}"
+    }
+    EOF
+    )"
+
+    FEDERATED_TOKEN="$(curl --fail "https://sts.googleapis.com/v1/token" \
+      --header "Accept: application/json" \
+      --header "Content-Type: application/json" \
+      --data "${PAYLOAD}" \
+      | jq -r '.access_token'
+      )"
+
+    ACCESS_TOKEN=$(curl -X POST "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${SERVICE_ACCOUNT_EMAIL}:generateAccessToken" \
+      --header "Accept: application/json" \
+      --header "Content-Type: application/json" \
+      --header "Authorization: Bearer ${FEDERATED_TOKEN}" \
+      --data '{"scope": ["https://www.googleapis.com/auth/cloud-platform"]}' \
+      | jq -r '.accessToken'
+      )"
+
+gcp-auth:
+  image: google/cloud-sdk:slim
+  extends: .id_tokens
+  script:
+    - echo ${GITLAB_OIDC_TOKEN} > .ci_job_jwt_file
+    - gcloud iam workload-identity-pools create-cred-config ${GCP_WORKLOAD_IDENTITY_PROVIDER}
+      --service-account="${GCP_SERVICE_ACCOUNT}"
+      --output-file=.gcp_temp_cred.json
+      --credential-source-file=.ci_job_jwt_file
+    - gcloud auth login --cred-file=`pwd`/.gcp_temp_cred.json
+    - gcloud auth list
