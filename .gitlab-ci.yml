@@ -11,7 +11,8 @@ variables:
 .id_tokens:
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      aud: https://gitlab.com
+      # aud: https://gitlab.com/
+      aud: https://iam.googleapis.com/
 
 gcp-auth:
   image: google/cloud-sdk:slim
