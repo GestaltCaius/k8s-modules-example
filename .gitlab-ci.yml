@@ -14,18 +14,21 @@ variables:
 gcp-auth:
   image: google/cloud-sdk:slim
   extends: .id_tokens
+  variables:
+    SERVICE_ACCOUNT_JSON_PATH: "${CI_PROJECT_DIR}/.gcp_temp_cred.json"
   script:
     - set -euxo pipefail
     - echo ${GITLAB_OIDC_TOKEN} > .ci_job_jwt_file
     - gcloud iam workload-identity-pools create-cred-config ${GCP_WORKLOAD_IDENTITY_PROVIDER}
       --service-account="${GCP_SERVICE_ACCOUNT}"
-      --output-file=.gcp_temp_cred.json
+      --output-file="$SERVICE_ACCOUNT_JSON_PATH"
       --credential-source-file=.ci_job_jwt_file
-    - gcloud auth login --cred-file=`pwd`/.gcp_temp_cred.json
+    - gcloud auth login --cred-file="$SERVICE_ACCOUNT_JSON_PATH"
     - gcloud auth list
   artifacts:
     paths:
       - .gcp_temp_cred.json # GCP credentials JSON file path (service-account-file.json)
+      - "$SERVICE_ACCOUNT_JSON_PATH"
 
 terraform-plan:
   image:
