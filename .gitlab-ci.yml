@@ -22,7 +22,7 @@ gcp-auth:
     - gcloud iam workload-identity-pools create-cred-config ${GCP_WORKLOAD_IDENTITY_PROVIDER}
       --service-account="${GCP_SERVICE_ACCOUNT}"
       --output-file="$SERVICE_ACCOUNT_JSON_PATH"
-      --credential-source-file="SERVICE_ACCOUNT_JWT_PATH"
+      --credential-source-file="$SERVICE_ACCOUNT_JWT_PATH"
     - gcloud auth login --cred-file="$SERVICE_ACCOUNT_JSON_PATH"
     - gcloud auth list
   artifacts:
@@ -37,7 +37,7 @@ terraform-plan:
   needs:
     - gcp-auth
   variables:
-    GOOGLE_APPLICATION_CREDENTIALS: "$SERVICE_ACCOUNT_JSON_PATH"
+    GOOGLE_APPLICATION_CREDENTIALS: ${SERVICE_ACCOUNT_JSON_PATH}
     TF_WORKSPACE: default
     TF_WORKDIR: ./terraform/environments/develop
     TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7
