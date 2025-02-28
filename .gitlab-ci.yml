@@ -31,7 +31,7 @@ gcp-auth:
       - $SERVICE_ACCOUNT_JSON_PATH
       - $SERVICE_ACCOUNT_JWT_PATH
 
-terraform-plan:
+.terraform-init:
   image:
     name: hashicorp/terraform:1.5.7
     entrypoint: [""]
@@ -42,5 +42,20 @@ terraform-plan:
     TF_WORKSPACE: develop
     TF_WORKDIR: ./terraform/environments/develop
     TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7
+  before_script:
+    - terraform -chdir=$TF_WORKDIR init -backend-config "bucket=$TF_STATE_BUCKET" -reconfigure -input=false
+
+terraform-plan:
+  extends:
+    - .terraform-init
   script:
-    - terraform -chdir=$TF_WORKDIR init -backend-config "bucket=$TF_STATE_BUCKET" -reconfigure
+    - terraform -chdir=$TF_WORKDIR plan -input=false
+
+terraform-apply:
+  when: manual
+  extends:
+    - .terraform-init
+  needs:
+    - terraform-plan
+  script:
+    - terraform -chdir=$TF_WORKDIR apply -input=false -auto-approve
