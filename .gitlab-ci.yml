@@ -39,8 +39,8 @@ terraform-plan:
     - gcp-auth
   variables:
     GOOGLE_APPLICATION_CREDENTIALS: ${SERVICE_ACCOUNT_JSON_PATH}
-    TF_WORKSPACE: default
+    TF_WORKSPACE: develop
     TF_WORKDIR: ./terraform/environments/develop
     TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7
   script:
-    - terraform -chdir=$TF_WORKDIR init -backend-config "bucket=$BUCKET_NAME" -reconfigure
+    - terraform -chdir=$TF_WORKDIR init -backend-config "bucket=$TF_STATE_BUCKET" -reconfigure
