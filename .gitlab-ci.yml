@@ -1,7 +1,7 @@
 variables:
   PROJECT_NUMBER: 373423551528 # your Google Cloud project number (not name).
   POOL_ID: cicd # ID of the Workload Identity Pool created in the first section.
-  PROVIDER_ID: gitlab # ID of the Workload Identity Provider created in the second section.
+  PROVIDER_ID: cicd-runner-gitlab # ID of the Workload Identity Provider created in the second section.
   SERVICE_ACCOUNT_EMAIL: cicd-runner@sl-rgu-gcp-sandbox-2y41-sbx.iam.gserviceaccount.com # full email address of the service account to impersonate, created in the previous section.
   GCP_SERVICE_ACCOUNT: "$SERVICE_ACCOUNT_EMAIL"
   GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}"
