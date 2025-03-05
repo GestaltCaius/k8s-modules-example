@@ -10,16 +10,11 @@ permissions:
   id-token: "write" # gcp auth
 
 env:
-  # TF_WORKING_DIR: ${{ vars.TF_ACTIONS_WORKING_DIR }}
+  TF_WORKING_DIR: ${{ vars.TF_ACTIONS_WORKING_DIR }}
   TF_VARS_PATH: terraform.tfvars
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
   TF_STATE_BUCKET_NAME: ${{ vars.TF_STATE_BUCKET_NAME }}
-
-defaults:
-  run:
-    shell: bash
-    working-directory: ${{ vars.TF_ACTIONS_WORKING_DIR }}
 
 jobs:
   get-configuration:
@@ -41,6 +36,10 @@ jobs:
     name: "terraform plan"
     needs: [get-configuration]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,6 +75,10 @@ jobs:
     name: terraform apply
     environment: production
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
