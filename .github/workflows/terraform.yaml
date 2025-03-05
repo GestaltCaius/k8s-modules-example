@@ -19,7 +19,7 @@ env:
 defaults:
   run:
     shell: bash
-    working-directory: $TF_WORKING_DIR
+    working-directory: ${{ env.TF_WORKING_DIR }}
 
 jobs:
   get-configuration:
@@ -35,10 +35,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: tfvars
-          path: $TF_VARS_PATH
+          path: ${{ env.TF_VARS_PATH }}
 
   terraform-plan:
     name: "terraform plan"
+    needs: [get-configuration]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -46,8 +47,8 @@ jobs:
 
       - uses: "google-github-actions/auth@v2"
         with:
-          project_id: $GCP_PROJECT_ID
-          workload_identity_provider: $GCP_WORKLOAD_IDENTITY_PROVIDER
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           # if you want to impersonate a service account, add:
           # service_account: my-service-account@my-project.iam.gserviceaccount.com
 
@@ -59,7 +60,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tfvars
-          path: $TF_VARS_PATH
+          path: ${{ env.TF_VARS_PATH }}
 
       - name: terraform init
         run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
@@ -71,7 +72,7 @@ jobs:
         run: terraform plan
 
   terraform-apply:
-    needs: [terraform-plan]
+    needs: [get-configuration, terraform-plan]
     name: terraform apply
     environment: production
     runs-on: ubuntu-latest
@@ -81,8 +82,8 @@ jobs:
 
       - uses: "google-github-actions/auth@v2"
         with:
-          project_id: $GCP_PROJECT_ID
-          workload_identity_provider: $GCP_WORKLOAD_IDENTITY_PROVIDER
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
       - name: install terraform
         uses: hashicorp/setup-terraform@v3
@@ -92,7 +93,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tfvars
-          path: $TF_VARS_PATH
+          path: ${{ env.TF_VARS_PATH }}
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: terraform init
