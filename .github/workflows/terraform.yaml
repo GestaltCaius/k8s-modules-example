@@ -10,7 +10,7 @@ permissions:
   id-token: "write" # gcp auth
 
 env:
-  TF_WORKING_DIR: ${{ vars.TF_ACTIONS_WORKING_DIR }}
+  # TF_WORKING_DIR: ${{ vars.TF_ACTIONS_WORKING_DIR }}
   TF_VARS_PATH: terraform.tfvars
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -19,7 +19,7 @@ env:
 defaults:
   run:
     shell: bash
-    working-directory: ${{ env.TF_WORKING_DIR }}
+    working-directory: ${{ vars.TF_ACTIONS_WORKING_DIR }}
 
 jobs:
   get-configuration:
