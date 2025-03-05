@@ -12,6 +12,7 @@ resource "google_container_cluster" "primary" {
   node_config {
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     service_account = google_service_account.gke.email
+    spot            = true
   }
   # required to enable workload identity
   workload_identity_config {

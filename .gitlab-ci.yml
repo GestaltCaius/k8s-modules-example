@@ -7,12 +7,15 @@ variables:
   GCP_WORKLOAD_IDENTITY_PROVIDER: "projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${POOL_ID}/providers/${PROVIDER_ID}"
   SERVICE_ACCOUNT_JSON_PATH: "${CI_PROJECT_DIR}/.gcp_temp_cred.json" # GCP credentials JSON file path (service-account-file.json)
   SERVICE_ACCOUNT_JWT_PATH: "${CI_PROJECT_DIR}/.ci_job_jwt_file" # JWT oauth2 token file
+  GOOGLE_APPLICATION_CREDENTIALS: ${SERVICE_ACCOUNT_JSON_PATH} # GCP auth file path for terraform
+  TF_WORKSPACE: develop # terraform jobs workspace
+  TF_WORKDIR: ./terraform/environments/develop # terraform jobs env dir
+  TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7 # terraform state bucket name
 
 .id_tokens:
   id_tokens:
     GITLAB_OIDC_TOKEN:
-      # aud: https://gitlab.com/
-      aud: "https://iam.googleapis.com/${GCP_WORKLOAD_IDENTITY_PROVIDER}"
+      aud: "https://iam.googleapis.com/${GCP_WORKLOAD_IDENTITY_PROVIDER}" # could be https://gitlab.com/ depending on which Identity Federation you're using
 
 gcp-auth:
   image: google/cloud-sdk:slim
@@ -37,11 +40,6 @@ gcp-auth:
     entrypoint: [""]
   needs:
     - gcp-auth
-  variables:
-    GOOGLE_APPLICATION_CREDENTIALS: ${SERVICE_ACCOUNT_JSON_PATH}
-    TF_WORKSPACE: develop
-    TF_WORKDIR: ./terraform/environments/develop
-    TF_STATE_BUCKET: tf-state-rguillaume-efsdfds6bdnsuyiwewf7
   before_script:
     - terraform -chdir=$TF_WORKDIR init -backend-config "bucket=$TF_STATE_BUCKET" -reconfigure -input=false
 

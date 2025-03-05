@@ -9,52 +9,98 @@ permissions:
   contents: read # required by terraform
   id-token: "write" # gcp auth
 
+env:
+  TF_WORKING_DIR: ${{ vars.TF_ACTIONS_WORKING_DIR }}
+  TF_VARS_PATH: terraform.tfvars
+  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+  TF_STATE_BUCKET_NAME: ${{ vars.TF_STATE_BUCKET_NAME }}
+
+defaults:
+  run:
+    shell: bash
+    working-directory: $TF_WORKING_DIR
+
 jobs:
-  terraform:
-    name: "Terraform"
+  get-configuration:
+    name: Download terraform config files
     runs-on: ubuntu-latest
     environment: production
+    env:
+      TF_VARS_FILE: ${{ secrets.TF_VARS_FILE }}
+    steps:
+      - name: terraform tfvars file setup
+        run: echo "$TF_VARS_FILE" > $TF_VARS_PATH
 
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ vars.TF_ACTIONS_WORKING_DIR }} # TODO use env vars
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfvars
+          path: $TF_VARS_PATH
 
+  terraform-plan:
+    name: "terraform plan"
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - uses: "google-github-actions/auth@v2"
         with:
-          project_id: ${{ vars.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          project_id: $GCP_PROJECT_ID
+          workload_identity_provider: $GCP_WORKLOAD_IDENTITY_PROVIDER
+          # if you want to impersonate a service account, add:
+          # service_account: my-service-account@my-project.iam.gserviceaccount.com
 
-      - name: Setup Terraform
+      - name: install terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "~> v1.5.7"
 
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      - name: Terraform Init
-        run: terraform init -backend-config "bucket=${{ vars.TF_STATE_BUCKET_NAME }}" -reconfigure
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfvars
+          path: $TF_VARS_PATH
 
-      - name: terraform workspace
-        run: terraform workspace select develop
+      - name: terraform init
+        run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
+
+      - name: Terraform Format
+        run: terraform fmt -check ../..
+
+      - name: Terraform Plan
+        run: terraform plan
+
+  terraform-apply:
+    needs: [terraform-plan]
+    name: terraform apply
+    environment: production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: "google-github-actions/auth@v2"
+        with:
+          project_id: $GCP_PROJECT_ID
+          workload_identity_provider: $GCP_WORKLOAD_IDENTITY_PROVIDER
+
+      - name: install terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~> v1.5.7"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfvars
+          path: $TF_VARS_PATH
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: terraform init
+        run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
         run: terraform fmt -check ../..
 
-      - name: terraform tfvars file setup
-        env:
-          TF_VARS_FILE: ${{ secrets.TF_VARS_FILE }}
-        run: echo "$TF_VARS_FILE" > terraform.tfvars
-
-      # Generates an execution plan for Terraform
-      - name: Terraform Plan
-        run: terraform plan
-
       - name: Terraform Apply
-        if: always() # allows to ignore tf plan errors
         run: terraform apply -auto-approve
