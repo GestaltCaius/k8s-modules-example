@@ -59,7 +59,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tfvars
-          path: "${{ env.TF_WORKING_DIR }}/${{ env.TF_VARS_PATH }}"
+          path: ${{ env.TF_WORKING_DIR }}
 
       - name: terraform init
         run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
