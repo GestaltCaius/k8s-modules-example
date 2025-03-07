@@ -8,12 +8,16 @@ inputs:
   prefix:
     description: "state bucket prefix"
     required: true
+  working_directory:
+    description: "tf working directory"
+    required: true
 
 runs:
   using: "composite"
   steps:
     - name: terraform init
       shell: bash
+      working-directory: ${{ inputs.working_directory }}
       run: |
         terraform init \
         -backend-config "bucket=${{ inputs.bucket }}" \

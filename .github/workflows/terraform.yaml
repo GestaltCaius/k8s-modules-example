@@ -67,8 +67,9 @@ jobs:
       #   run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
       - uses: ./.github/actions/terraform-init
         with:
-          bucket: ${{ vars.TF_STATE_BUCKET_NAME }}
-          prefix: ${{ vars.TF_STATE_BUCKET_PREFIX }}
+          bucket: ${{ env.TF_STATE_BUCKET_NAME }}
+          prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
+          working_directory: ${{ env.TF_WORKING_DIR }}
 
       - name: Terraform Format
         run: terraform fmt -check ../..
@@ -113,8 +114,9 @@ jobs:
       #     -reconfigure
       - uses: ./.github/actions/terraform-init
         with:
-          bucket: ${{ vars.TF_STATE_BUCKET_NAME }}
-          prefix: ${{ vars.TF_STATE_BUCKET_PREFIX }}
+          bucket: ${{ env.TF_STATE_BUCKET_NAME }}
+          prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
+          working_directory: ${{ env.TF_WORKING_DIR }}
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
