@@ -58,4 +58,4 @@ runs:
     - name: terraform action
       shell: ${{ inputs.shell }}
       working-directory: ${{ inputs.working_directory }}
-      run: terraform ${{ inputs.tf_action }} -auto-approve -input=false
+      run: terraform ${{ inputs.tf_action }} -input=false
