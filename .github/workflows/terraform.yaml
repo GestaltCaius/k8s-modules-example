@@ -15,6 +15,18 @@ env:
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
   TF_STATE_BUCKET_NAME: ${{ vars.TF_STATE_BUCKET_NAME }}
+  TF_STATE_BUCKET_PREFIX: ${{ vars.TF_STATE_BUCKET_PREFIX }}
+  TF_WORKSPACE: default
+
+anchors:
+  - &terraform-init
+    name: terraform init
+    run: |
+      terraform init \
+      -backend-config "bucket=$TF_STATE_BUCKET_NAME" \
+      -backend-config "prefix=$TF_STATE_BUCKET_PREFIX" \
+      -reconfigure
+
 
 jobs:
   get-configuration:
@@ -61,8 +73,9 @@ jobs:
           name: tfvars
           path: ${{ env.TF_WORKING_DIR }}
 
-      - name: terraform init
-        run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
+      # - name: terraform init
+      #   run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
+      - <<: *terraform-init
 
       - name: Terraform Format
         run: terraform fmt -check ../..
@@ -99,8 +112,13 @@ jobs:
           path: ${{ env.TF_VARS_PATH }}
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      - name: terraform init
-        run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
+      # - name: terraform init
+      #   run: |
+      #     terraform init \
+      #     -backend-config "bucket=$TF_STATE_BUCKET_NAME" \
+      #     -backend-config "prefix=$TF_STATE_BUCKET_PREFIX" \
+      #     -reconfigure
+      - <<: *terraform-init
 
       # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
