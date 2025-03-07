@@ -38,10 +38,10 @@ jobs:
     name: "terraform plan"
     needs: [get-configuration]
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ env.TF_WORKING_DIR }}
+    # defaults:
+    #   run:
+    #     shell: bash
+    #     working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,7 +54,6 @@ jobs:
           project_id: ${{ env.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           tf_action: plan
-
 
       # - uses: "google-github-actions/auth@v2"
       #   with:
@@ -90,37 +89,69 @@ jobs:
     name: terraform apply
     environment: production
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ env.TF_WORKING_DIR }}
+    # defaults:
+    #   run:
+    #     shell: bash
+    #     working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: "google-github-actions/auth@v2"
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-
-      - name: install terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~> v1.5.7"
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: tfvars
-          path: ${{ env.TF_WORKING_DIR }}
-
-      - uses: ./.github/actions/terraform-init
+      - uses: ./.github/actions/terraform
         with:
           bucket: ${{ env.TF_STATE_BUCKET_NAME }}
           prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
           working_directory: ${{ env.TF_WORKING_DIR }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          tf_action: apply
 
-      - name: Terraform Format
-        run: terraform fmt -check ../..
+      # - uses: "google-github-actions/auth@v2"
+      #   with:
+      #     project_id: ${{ env.GCP_PROJECT_ID }}
+      #     workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+      # - name: install terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: "~> v1.5.7"
+
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: tfvars
+      #     path: ${{ env.TF_WORKING_DIR }}
+
+      # - uses: ./.github/actions/terraform-init
+      #   with:
+      #     bucket: ${{ env.TF_STATE_BUCKET_NAME }}
+      #     prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
+      #     working_directory: ${{ env.TF_WORKING_DIR }}
+
+      # - name: Terraform Format
+      #   run: terraform fmt -check ../..
+
+      # - name: Terraform Apply
+      #   run: terraform apply -auto-approve
+
+  terraform-destroy:
+    needs: [get-configuration, terraform-plan, terraform-apply]
+    if: always()
+    name: terraform destroy
+    environment: production
+    runs-on: ubuntu-latest
+    # defaults:
+    #   run:
+    #     shell: bash
+    #     working-directory: ${{ env.TF_WORKING_DIR }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/terraform
+        with:
+          bucket: ${{ env.TF_STATE_BUCKET_NAME }}
+          prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
+          working_directory: ${{ env.TF_WORKING_DIR }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          tf_action: destroy
