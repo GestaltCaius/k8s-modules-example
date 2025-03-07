@@ -43,39 +43,46 @@ jobs:
         shell: bash
         working-directory: ${{ env.TF_WORKING_DIR }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - uses: "google-github-actions/auth@v2"
-        with:
-          project_id: ${{ env.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          # if you want to impersonate a service account, add:
-          # service_account: my-service-account@my-project.iam.gserviceaccount.com
-
-      - name: install terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "~> v1.5.7"
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: tfvars
-          path: ${{ env.TF_WORKING_DIR }}
-
-      # - name: terraform init
-      #   run: terraform init -backend-config "bucket=$TF_STATE_BUCKET_NAME" -reconfigure
-      - uses: ./.github/actions/terraform-init
+      - uses: ./.github/actions/terraform
         with:
           bucket: ${{ env.TF_STATE_BUCKET_NAME }}
           prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
           working_directory: ${{ env.TF_WORKING_DIR }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          tf_action: plan
 
-      - name: Terraform Format
-        run: terraform fmt -check ../..
+      # - name: Checkout
+      #   uses: actions/checkout@v4
 
-      - name: Terraform Plan
-        run: terraform plan
+      # - uses: "google-github-actions/auth@v2"
+      #   with:
+      #     project_id: ${{ env.GCP_PROJECT_ID }}
+      #     workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      #     # if you want to impersonate a service account, add:
+      #     # service_account: my-service-account@my-project.iam.gserviceaccount.com
+
+      # - name: install terraform
+      #   uses: hashicorp/setup-terraform@v3
+      #   with:
+      #     terraform_version: "~> v1.5.7"
+
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: tfvars
+      #     path: ${{ env.TF_WORKING_DIR }}
+
+      # - uses: ./.github/actions/terraform-init
+      #   with:
+      #     bucket: ${{ env.TF_STATE_BUCKET_NAME }}
+      #     prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
+      #     working_directory: ${{ env.TF_WORKING_DIR }}
+
+      # - name: Terraform Format
+      #   run: terraform fmt -check ../..
+
+      # - name: Terraform Plan
+      #   run: terraform plan
 
   terraform-apply:
     needs: [get-configuration, terraform-plan]
@@ -103,22 +110,14 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: tfvars
-          path: ${{ env.TF_VARS_PATH }}
+          path: ${{ env.TF_WORKING_DIR }}
 
-      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-      # - name: terraform init
-      #   run: |
-      #     terraform init \
-      #     -backend-config "bucket=$TF_STATE_BUCKET_NAME" \
-      #     -backend-config "prefix=$TF_STATE_BUCKET_PREFIX" \
-      #     -reconfigure
       - uses: ./.github/actions/terraform-init
         with:
           bucket: ${{ env.TF_STATE_BUCKET_NAME }}
           prefix: ${{ env.TF_STATE_BUCKET_PREFIX }}
           working_directory: ${{ env.TF_WORKING_DIR }}
 
-      # Checks that all Terraform configuration files adhere to a canonical format
       - name: Terraform Format
         run: terraform fmt -check ../..
 
