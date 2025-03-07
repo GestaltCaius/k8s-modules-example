@@ -105,6 +105,7 @@ jobs:
           project_id: ${{ env.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           tf_action: apply
+          tf_args: --auto-approve
 
       # - uses: "google-github-actions/auth@v2"
       #   with:
@@ -155,3 +156,4 @@ jobs:
           project_id: ${{ env.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ env.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           tf_action: destroy
+          tf_args: --auto-approve

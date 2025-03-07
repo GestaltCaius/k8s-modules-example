@@ -20,6 +20,10 @@ inputs:
     description: "plan, apply or destroy"
     required: false
     default: plan
+  tf_args:
+    description: "tf arguments (e.g. `--auto-approve`, etc.)"
+    required: false
+    default: ""
   shell:
     description: "type of shell"
     required: false
@@ -58,4 +62,4 @@ runs:
     - name: terraform action
       shell: ${{ inputs.shell }}
       working-directory: ${{ inputs.working_directory }}
-      run: terraform ${{ inputs.tf_action }} -input=false
+      run: terraform ${{ inputs.tf_action }} ${{ inputs.tf_args }} -input=false
