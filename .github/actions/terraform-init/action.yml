@@ -1,0 +1,21 @@
+name: "Terraform Init"
+description: "Initialise Terraform state with GCS backend"
+
+inputs:
+  bucket:
+    description: "state bucket name"
+    required: true
+  prefix:
+    description: "state bucket prefix"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: terraform init
+      shell: bash
+      run: |
+        terraform init \
+        -backend-config "bucket=${{ inputs.bucket }}" \
+        -backend-config "prefix=${{ inputs.prefix }}" \
+        -reconfigure
